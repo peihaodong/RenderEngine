@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>glsl/render_triangle.vert</file>
+        <file>glsl/render_triangle.frag</file>
+		<file>glsl/render_image.vert</file>
+        <file>glsl/render_image.frag</file>
+		<file>glsl/render_view_matrix.vert</file>
+        <file>glsl/render_view_matrix.frag</file>
+		<file>glsl/render_projection_matrix.vert</file>
+        <file>glsl/render_projection_matrix.frag</file>
+		<file>glsl/render_camera.vert</file>
+        <file>glsl/render_camera.frag</file>
+    </qresource>
+</RCC>
