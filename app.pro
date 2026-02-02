@@ -8,4 +8,13 @@ CONFIG += ordered
 SUBDIRS += \
 		base \
 		task_callback \
+		render_engine \
 		test
+
+# 声明依赖关系
+task_callback.depends = base
+render_engine.depends = task_callback
+test.depends = task_callback
+
+# 指定启动项目
+test.CONFIG += run_first

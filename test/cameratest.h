@@ -121,7 +121,7 @@ public:
 
 protected:
 	PCameraTest m_camera;
-	float m_sensitivity = 0.2f;
+	float m_sensitivity = 0.2f;//¡È√Ù∂»
 };
 using PCameraControlTest = std::shared_ptr<CameraControlTest>;
 

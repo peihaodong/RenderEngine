@@ -1,11 +1,11 @@
 # 指定该项目所需的Qt模块
-QT    += core gui
+QT    += core gui opengl
 
 # 如果QT版本大于4，则将widgets模块加入到项目中
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # 指定编译后生成的可执行文件或库文件的名称
-TARGET = task_callback
+TARGET = render_engine
 
 # 指定项目的类型或模板（app:应用程序 lib:库 subdirs:多子目录项目 plugin:插件）
 TEMPLATE = lib
@@ -25,21 +25,35 @@ CONFIG += \
 
 # 指定头文件
 HEADERS += \
-		include/taskcommon.h \
-		include/taskmanager.h \
-		include/task.h \
-		src/threadpool.h
+		include/constant.h \
+		include/command.h \
+		include/attribute.h \
+		include/object.h \
+		include/geometry.h \
+		include/material.h \
+		include/openglwidget.h \
+		include/renderer.h \
+		include/object3d.h \
+		include/camera.h \
+		include/driver.h
 
 # 指定源文件
 SOURCES += \
-		src/taskcommon.cpp \
-		src/taskmanager.cpp \
-		src/task.cpp \
-		src/threadpool.cpp
+		src/command.cpp \
+		src/object.cpp \
+		src/geometry.cpp \
+		src/material.cpp \
+		src/openglwidget.cpp \
+		src/renderer.cpp \
+		src/object3d.cpp \
+		src/camera.cpp \
+		src/driver.cpp
 
 # 指定附加包含目录（$$PWD代表pro文件所在的目录）
 INCLUDEPATH += $$PWD/include \
-		$$PWD/../base/include
+		$$PWD/../base/include \
+		$$PWD/../task_callback/include \
+		$$PWD/../third_party_library/include
 
 # 指定附加库目录
 LIBS += \
@@ -47,4 +61,5 @@ LIBS += \
 
 # 指定附加依赖项
 LIBS += \
-		-lbase
+		-lbase \
+		-ltask_callback

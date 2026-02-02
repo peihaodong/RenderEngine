@@ -16,7 +16,7 @@ uint64_t GetUniqueID();
 #pragma warning(push)  // 保存当前警告状态
 #pragma warning(disable: 4251)  // 禁用 C4251 警告
 
-class DLL_EXPORT Object : public std::enable_shared_from_this<Object>
+class DLL_EXPORT Object
 {
 public:
 	Object();

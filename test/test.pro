@@ -25,7 +25,7 @@ CONFIG += \
 # 指定头文件
 HEADERS += \
 		mainwindow.h \
-		openglwidget.h \
+		openglwidgettest.h \
 		renderertest.h \
 		cameratest.h
 
@@ -33,7 +33,7 @@ HEADERS += \
 SOURCES += \
 		main.cpp \
 		mainwindow.cpp \
-		openglwidget.cpp \
+		openglwidgettest.cpp \
 		renderertest.cpp \
 		cameratest.cpp
 		
@@ -44,7 +44,9 @@ FORMS += \
 # 指定附加包含目录（$$PWD代表pro文件所在的目录）
 INCLUDEPATH += \
 		$$PWD/../base/include \
-		$$PWD/../task_callback/include
+		$$PWD/../task_callback/include \
+		$$PWD/../render_engine/include \
+		$$PWD/../third_party_library/include
 
 # 指定附加库目录
 LIBS += \
@@ -53,7 +55,8 @@ LIBS += \
 # 指定附加依赖项
 LIBS += \
 		-lbase \
-		-ltask_callback
+		-ltask_callback \
+		-lrender_engine
 		
 # 指定资源文件
 RESOURCES += \

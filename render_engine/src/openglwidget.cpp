@@ -3,12 +3,32 @@
 OpenGLWidget::OpenGLWidget(QWidget *parent /*= nullptr*/)
 	: QOpenGLWidget(parent)
 {
-	m_renderer = std::make_shared<RenderDepth>();
+	m_renderer = std::make_shared<Renderer>();
 }
 
 OpenGLWidget::~OpenGLWidget()
 {
 
+}
+
+void OpenGLWidget::SetCamera(const PCamera& camera)
+{
+	m_renderer->SetCamera(camera);
+}
+
+void OpenGLWidget::SetCameraControl(const PCameraControl& camera_control)
+{
+	m_renderer->SetCameraControl(camera_control);
+}
+
+void OpenGLWidget::SetScene(const PScene& scene)
+{
+	m_renderer->SetScene(scene);
+}
+
+void OpenGLWidget::SetClearColor(float r, float g, float b, float a)
+{
+	m_renderer->SetClearColor(r, g, b, a);
 }
 
 void OpenGLWidget::initializeGL()
@@ -29,41 +49,47 @@ void OpenGLWidget::paintGL()
 void OpenGLWidget::mousePressEvent(QMouseEvent* event)
 {
 	__super::mousePressEvent(event);
-	m_renderer->mousePressEvent(event);
-	update();
+
+	if (!m_renderer->mousePressEvent(event))
+		update();
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent* event)
 {
 	__super::mouseReleaseEvent(event);
-	m_renderer->mouseReleaseEvent(event);
-	update();
+
+	if (!m_renderer->mouseReleaseEvent(event))
+		update();
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
 {
 	__super::mouseMoveEvent(event);
-	m_renderer->mouseMoveEvent(event);
-	update();
+
+	if (!m_renderer->mouseMoveEvent(event))
+		update();
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent* event)
 {
 	__super::wheelEvent(event);
-	m_renderer->wheelEvent(event);
-	update();
+
+	if (!m_renderer->wheelEvent(event))
+		update();
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent* event)
 {
 	__super::keyPressEvent(event);
-	m_renderer->keyPressEvent(event);
-	update();
+
+	if (!m_renderer->keyPressEvent(event))
+		update();
 }
 
 void OpenGLWidget::keyReleaseEvent(QKeyEvent* event)
 {
 	__super::keyReleaseEvent(event);
-	m_renderer->keyReleaseEvent(event);
-	update();
+
+	if (!m_renderer->keyReleaseEvent(event))
+		update();
 }
