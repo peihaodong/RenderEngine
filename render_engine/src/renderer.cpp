@@ -204,10 +204,10 @@ void Renderer::paintGL()
 	//获取相机视图矩阵
 	glm::mat4 cameraViewMatrix = m_camera->GetWorldInverseMatrix();
 
-	//计算当前视图投影矩阵
-	glm::mat4 curViewProjectionMatrix = cameraProjectionMatrix * cameraViewMatrix;
+	//计算当前摄像机视图投影矩阵
+	m_curCameraViewProjectionMatrix = cameraProjectionMatrix * cameraViewMatrix;
 	//初始化渲染列表
-	m_render_list->InitRenderList(m_scene, curViewProjectionMatrix);
+	m_render_list->InitRenderList(m_scene, m_curCameraViewProjectionMatrix);
 
 	//渲染
 	Render();

@@ -18,6 +18,9 @@ using PTexture = std::shared_ptr<Texture>;
 class Geometry;
 using PGeometry = std::shared_ptr<Geometry>;
 
+#pragma warning(push)  // 保存当前警告状态
+#pragma warning(disable: 4251)  // 禁用 C4251 警告
+
 //驱动
 class DLL_EXPORT Driver : public Object, public QOpenGLFunctions_4_3_Core, public std::enable_shared_from_this<Driver>
 {
@@ -162,3 +165,5 @@ protected:
 	std::unordered_map<ID, PDriverAttribute> m_mapDriverAttribute;
 	std::unordered_map<ID, PDriverIndexAttribute> m_mapDriverIndexAttribute;
 };
+
+#pragma warning(pop)  // 恢复之前的警告状态

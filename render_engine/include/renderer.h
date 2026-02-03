@@ -145,6 +145,7 @@ protected:
 
 	glm::vec4 m_clear_color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 	glm::vec4 m_viewport = glm::vec4(0, 0, 800, 600);
+	glm::mat4 m_curCameraViewProjectionMatrix;
 
 protected:
 	PRenderList m_render_list;	//‰÷»æ¡–±Ì

@@ -57,7 +57,7 @@ DriverMaterial::~DriverMaterial()
 
 void DriverMaterial::Bind()
 {
-
+	m_program->bind();
 }
 
 void DriverMaterial::UpdateUniform()
