@@ -2,8 +2,6 @@
 #include "constant.h"
 #include "geometry.h"
 #include "material.h"
-#include "command.h"
-#include <taskmanager.h>
 
 Object3D::Object3D()
 {
@@ -13,10 +11,7 @@ Object3D::Object3D()
 
 Object3D::~Object3D()
 {
-	PTaskParameter parameter = TaskParameter::Create(ETT_Object3DDestroy);
-	parameter->m_informer = this;
-	TaskManager_Sync* manager = TaskManager_Sync::GetInstance();
-	manager->Notify(parameter);
+
 }
 
 void Object3D::SetPosition(const glm::vec3& position)

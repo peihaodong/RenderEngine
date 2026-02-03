@@ -22,6 +22,10 @@ using PFrustum = std::shared_ptr<Frustum>;
 class RenderableObject;
 using PRenderableObject = std::shared_ptr<RenderableObject>;
 
+class DriverState;
+using PDriverState = std::shared_ptr<DriverState>;
+class DriverManager;
+
 #pragma warning(push)  // 保存当前警告状态
 #pragma warning(disable: 4251)  // 禁用 C4251 警告
 
@@ -131,6 +135,8 @@ public:
 
 protected:
 	void Render();
+	void RenderRenderableObject(const PRenderableObject& object);
+	void RenderBufferDirect(const PRenderableObject& object);
 
 protected:
 	PCamera m_camera;
@@ -138,9 +144,13 @@ protected:
 	PScene m_scene;
 
 	glm::vec4 m_clear_color = glm::vec4(1.0, 1.0, 1.0, 1.0);
+	glm::vec4 m_viewport = glm::vec4(0, 0, 800, 600);
 
 protected:
 	PRenderList m_render_list;	//渲染列表
+
+	PDriverState m_driver_state;	//驱动-状态
+	DriverManager* m_driver_manager;//驱动-管理者
 };
 using PRenderer = std::shared_ptr<Renderer>;
 

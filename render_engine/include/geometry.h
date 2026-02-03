@@ -27,6 +27,7 @@ public:
 
 	//获取属性
 	Attributef::Ptr GetAttribute(EAttributeType type) const;
+	std::unordered_map<EAttributeType, Attributef::Ptr> GetAllAttribute() const;
 	//获取索引属性
 	Attributei::Ptr GetIndexAttribute() const;
 	//获取ID

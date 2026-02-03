@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>glsl/material.vert</file>
+        <file>glsl/material.frag</file>
+    </qresource>
+</RCC>

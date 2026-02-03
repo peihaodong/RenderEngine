@@ -1,6 +1,7 @@
 #include "material.h"
 #include "command.h"
 #include <taskmanager.h>
+#include "texture.h"
 
 Material::Material()
 {
@@ -24,6 +25,11 @@ std::shared_ptr<Material> Material::New()
 ID Material::GetID() const
 {
 	return m_id;
+}
+
+EMaterialType Material::GetMaterialType() const
+{
+	return m_type;
 }
 
 void Material::SetDepthTest(bool enable)
@@ -69,4 +75,14 @@ double Material::GetDepthClearColor() const
 bool Material::IsTransparent() const
 {
 	return m_bTransparent;
+}
+
+void Material::SetDiffuseTexture(const PTexture& texture)
+{
+	m_textureDiffuse = texture;
+}
+
+PTexture Material::GetDiffuseTexture() const
+{
+	return m_textureDiffuse;
 }

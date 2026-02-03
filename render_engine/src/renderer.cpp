@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "object.h"
 #include "material.h"
+#include "driver.h"
 
 SRenderItem::SRenderItem()
 {
@@ -141,6 +142,9 @@ Renderer::Renderer()
 	m_strClassName = "Renderer";
 
 	m_render_list = RenderList::New();
+
+	m_driver_state = DriverState::New();
+	m_driver_manager = DriverManager::GetInstance();
 }
 
 std::shared_ptr<Renderer> Renderer::New()
@@ -183,6 +187,9 @@ void Renderer::initializeGL()
 void Renderer::resizeGL(int w, int h)
 {
 	m_camera_control->SetWindowWidthHeight(w, h);
+
+	m_viewport.z = w;
+	m_viewport.w = h;
 }
 
 void Renderer::paintGL()
@@ -238,8 +245,54 @@ bool Renderer::keyReleaseEvent(QKeyEvent* event)
 
 void Renderer::Render()
 {
-	const auto& opaqueObjects = m_render_list->GetOpaques();
-	const auto& transparentObjects = m_render_list->GetTransparents();
+	m_driver_state->SetViewport(m_viewport);
 
+	const std::vector<PSRenderItem>& opaqueObjects = m_render_list->GetOpaques();
+	const std::vector<PSRenderItem>& transparentObjects = m_render_list->GetTransparents();
 
+	for (const auto& item : opaqueObjects)
+	{
+		RenderRenderableObject(item->m_renderable_object);
+	}
+
+	for (const auto& item : transparentObjects)
+	{
+		RenderRenderableObject(item->m_renderable_object);
+	}
+}
+
+void Renderer::RenderRenderableObject(const PRenderableObject& object)
+{
+	object->UpdateModelViewMatrix(m_camera->GetWorldInverseMatrix());
+	object->UpdateNormalMatrix();
+
+	RenderBufferDirect(object);
+}
+
+void Renderer::RenderBufferDirect(const PRenderableObject& object)
+{
+	PMaterial material = object->GetMaterial();
+	PGeometry geometry = object->GetGeometry();
+
+	//init program
+	//upload texture
+	PDriverMaterial driver_material = m_driver_manager->GetDriverMaterial(material);
+	//upload vbo
+	//upload ebo
+	//upload vao
+	PDriverGeometry driver_geometry = m_driver_manager->GetDriverGeometry(geometry);
+
+	//bind program
+	driver_material->Bind();
+	//set uniform
+	driver_material->UpdateUniform();
+	//active texture uint
+	driver_material->ActiveTextureUint();
+	//bind vao
+	driver_geometry->Bind();
+	//draw
+	m_driver_state->DrawElements(driver_geometry->GetIndexAttributeCount());
+
+	//release vao
+	//release program
 }

@@ -6,7 +6,7 @@
 #include "command.h"
 #include <taskmanager.h>
 
-enum class EAttributeType
+enum EAttributeType
 {
 	EAT_Position,
 	EAT_Color,

@@ -40,6 +40,11 @@ Attributef::Ptr Geometry::GetAttribute(EAttributeType type) const
 	return nullptr;
 }
 
+std::unordered_map<EAttributeType, Attributef::Ptr> Geometry::GetAllAttribute() const
+{
+	return m_mapAttribute;
+}
+
 Attributei::Ptr Geometry::GetIndexAttribute() const
 {
 	return m_IndexAttribute;

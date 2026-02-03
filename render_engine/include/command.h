@@ -3,10 +3,10 @@
 
 enum ETaskType
 {
-	ETT_Object3DDestroy,
-	ETT_AttributeDestroy,
-	ETT_GeometryDestroy,
-	ETT_MaterialDestroy,
+	ETT_AttributeDestroy,	//vbo ebo
+	ETT_GeometryDestroy,	//vao
+	ETT_MaterialDestroy,	//program
+	ETT_TextureDestroy		//texture
 };
 
 class DLL_EXPORT UIntData : public Data

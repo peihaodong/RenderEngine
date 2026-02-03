@@ -8,6 +8,9 @@
 #include <QVector3D>
 #include <QMatrix4x4>
 
+using byte = unsigned char;
+using HashCode = size_t;
+
 using ID = uint32_t;
 static ID GenerateID()
 {
@@ -154,5 +157,82 @@ static uint32_t ToGL(const EDepthFunction& value)
 		return GL_GEQUAL;
 	default:
 		return GL_NONE;
+	}
+}
+
+enum class ETextureType
+{
+	ETT_Texture2D,
+	ETT_TextureCubeMap
+};
+static GLuint ToGL(const ETextureType& value)
+{
+	switch (value) 
+	{
+	case ETextureType::ETT_Texture2D:
+		return GL_TEXTURE_2D;
+	case ETextureType::ETT_TextureCubeMap:
+		return GL_TEXTURE_CUBE_MAP;
+	default:
+		return GL_NONE;
+	}
+}
+
+enum class ETextureFormat
+{
+	ETF_RGB,
+	ETF_RGBA
+};
+static GLuint ToGL(const ETextureFormat& format)
+{
+	switch (format)
+	{
+	case ETextureFormat::ETF_RGB:
+		return GL_RGB;
+	case ETextureFormat::ETF_RGBA:
+		return GL_RGBA;
+	default:
+		return 0;
+	}
+}
+
+enum class ETextureFilter
+{
+	ETF_Linear,
+	ETF_Nearest
+};
+static uint32_t ToGL(const ETextureFilter& value)
+{
+	switch (value) 
+	{
+	case ETextureFilter::ETF_Linear:
+		return GL_LINEAR;
+	case ETextureFilter::ETF_Nearest:
+		return GL_NEAREST;
+	default:
+		return 0;
+	}
+}
+
+enum class ETextureWrapping 
+{
+	ETW_Repeat,
+	ETW_ClampToEdge,
+	ETW_ClampToBorder,
+	ETW_MirroredRepeat,
+};
+static uint32_t ToGL(const ETextureWrapping& value)
+{
+	switch (value) {
+	case ETextureWrapping::ETW_Repeat:
+		return GL_REPEAT;
+	case ETextureWrapping::ETW_ClampToEdge:
+		return GL_CLAMP_TO_EDGE;
+	case ETextureWrapping::ETW_MirroredRepeat:
+		return GL_MIRRORED_REPEAT;
+	case ETextureWrapping::ETW_ClampToBorder:
+		return GL_CLAMP_TO_BORDER;
+	default:
+		return 0;
 	}
 }

@@ -31,6 +31,7 @@ HEADERS += \
 		include/object.h \
 		include/geometry.h \
 		include/material.h \
+		include/texture.h \
 		include/openglwidget.h \
 		include/renderer.h \
 		include/object3d.h \
@@ -43,6 +44,7 @@ SOURCES += \
 		src/object.cpp \
 		src/geometry.cpp \
 		src/material.cpp \
+		src/texture.cpp \
 		src/openglwidget.cpp \
 		src/renderer.cpp \
 		src/object3d.cpp \
@@ -63,3 +65,7 @@ LIBS += \
 LIBS += \
 		-lbase \
 		-ltask_callback
+		
+# 指定资源文件
+RESOURCES += \
+        glsl.qrc
