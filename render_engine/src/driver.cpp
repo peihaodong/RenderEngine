@@ -8,6 +8,14 @@
 Driver::Driver()
 {
 	m_strClassName = "Driver";
+
+	initializeOpenGLFunctions();
+}
+
+void Driver::CheckError()
+{
+	if (glGetError() != GL_NO_ERROR)
+		assert(false);
 }
 
 DriverState::DriverState()
@@ -18,6 +26,11 @@ DriverState::DriverState()
 std::shared_ptr<DriverState> DriverState::New()
 {
 	return std::make_shared<DriverState>();
+}
+
+void DriverState::SetClearColor(const glm::vec4& color)
+{
+	glClearColor(color.r, color.g, color.b, color.a);
 }
 
 void DriverState::SetViewport(const glm::vec4& viewport)
@@ -34,6 +47,17 @@ void DriverState::SetViewport(const glm::vec4& viewport)
 		static_cast<GLsizei>(m_viewport.z),
 		static_cast<GLsizei>(m_viewport.w)
 	);
+}
+
+void DriverState::ClearBackground()
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void DriverState::DrawElements(uint32_t count)
@@ -60,14 +84,25 @@ void DriverMaterial::Bind()
 	m_program->bind();
 }
 
-void DriverMaterial::UpdateUniform()
+void DriverMaterial::UpdateUniform(const char *name, const QMatrix4x4& value)
 {
-
+	m_program->setUniformValue(name, value);
 }
 
 void DriverMaterial::ActiveTextureUint()
 {
+	PMaterial material = m_material.lock();
+	if (!material)
+		return;
+	PTexture texture = material->GetDiffuseTexture();
+	if (!texture)
+		return;
+	DriverManager* manager = DriverManager::GetInstance();
+	GLuint nTextureGPUID = manager->GetTextureGPUID(texture->GetID());
 
+	m_program->setUniformValue("sampler", 0);
+	glActiveTexture(GL_TEXTURE0);//激活0号纹理单元
+	glBindTexture(ToGL(texture->GetTextureType()), nTextureGPUID);//绑定texture
 }
 
 void DriverMaterial::Init()
@@ -106,6 +141,11 @@ DriverTexture::~DriverTexture()
 		glDeleteTextures(1, &m_nTexture);
 		m_nTexture = 0;
 	}
+}
+
+GLuint DriverTexture::GetGPUID() const
+{
+	return m_nTexture;
 }
 
 void DriverTexture::Init()
@@ -164,12 +204,12 @@ DriverGeometry::~DriverGeometry()
 
 void DriverGeometry::Bind()
 {
-
+	glBindVertexArray(m_vao);
 }
 
 uint32_t DriverGeometry::GetIndexAttributeCount() const
 {
-	return 0;
+	return m_nIndexAttributeCount;
 }
 
 void DriverGeometry::Init()
@@ -182,6 +222,7 @@ void DriverGeometry::Init()
 
 	std::unordered_map<EAttributeType, Attributef::Ptr> mapAttribute = geometry->GetAllAttribute();
 	Attributei::Ptr index_attribute = geometry->GetIndexAttribute();
+	m_nIndexAttributeCount = index_attribute->GetCount();
 
 	glGenVertexArrays(1, &m_vao);//创建vao
 	glBindVertexArray(m_vao);//绑定vao
@@ -194,12 +235,12 @@ void DriverGeometry::Init()
 		uint32_t nItemSize = attribute->GetItemSize();
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);//绑定vbo
 		glEnableVertexAttribArray(nAttributeType);//激活vao的位置
-		glVertexAttribPointer(0, nItemSize, GL_FLOAT, GL_FALSE, sizeof(float) * nItemSize, (void*)0);//vao的位置绑定vbo描述属性
+		glVertexAttribPointer(nAttributeType, nItemSize, GL_FLOAT, GL_FALSE, sizeof(float) * nItemSize, (void*)0);//vao的位置绑定vbo描述属性
 	}
 
 	GLuint ebo = driver_manager->GetIndexAttributeGPUID(index_attribute->GetID());
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);//将ebo绑定在vao中
-
+	
 	glBindVertexArray(0);//解绑vao
 }
 
@@ -370,6 +411,15 @@ GLuint DriverManager::GetIndexAttributeGPUID(ID idAttribute) const
 {
 	auto iter = m_mapDriverIndexAttribute.find(idAttribute);
 	if (iter == m_mapDriverIndexAttribute.end())
+		return 0;
+
+	return iter->second->GetGPUID();
+}
+
+GLuint DriverManager::GetTextureGPUID(ID idTexture) const
+{
+	auto iter = m_mapDriverTexture.find(idTexture);
+	if (iter == m_mapDriverTexture.end())
 		return 0;
 
 	return iter->second->GetGPUID();

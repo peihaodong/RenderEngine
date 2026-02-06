@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "camera.h"
 #include "object.h"
+#include "object3d.h"
 #include "material.h"
 #include "driver.h"
 
@@ -143,7 +144,6 @@ Renderer::Renderer()
 
 	m_render_list = RenderList::New();
 
-	m_driver_state = DriverState::New();
 	m_driver_manager = DriverManager::GetInstance();
 }
 
@@ -181,12 +181,18 @@ void Renderer::SetClearColor(float r, float g, float b, float a)
 
 void Renderer::initializeGL()
 {
+	if (!m_driver_state)
+	{
+		m_driver_state = DriverState::New();
+		//m_driver_state->initializeOpenGLFunctions();
+	}
 
+	m_driver_state->SetClearColor(m_clear_color);
 }
 
 void Renderer::resizeGL(int w, int h)
 {
-	m_camera_control->SetWindowWidthHeight(w, h);
+	m_camera->SetWindowWidthHeight(w, h);
 
 	m_viewport.z = w;
 	m_viewport.w = h;
@@ -196,18 +202,16 @@ void Renderer::paintGL()
 {
 	//更新场景世界变换矩阵
 	m_scene->UpdateWorldMatrix(true, true);
-	//更新相机世界变换矩阵
-	m_camera->UpdateWorldMatrix(true, true);
 
 	//获取相机投影矩阵
-	glm::mat4 cameraProjectionMatrix = m_camera->GetProjectionMatrix();
+	m_matrixCameraProjection = m_camera->GetProjectionMatrix();
 	//获取相机视图矩阵
-	glm::mat4 cameraViewMatrix = m_camera->GetWorldInverseMatrix();
+	m_matrixCameraView = m_camera->GetViewMatrix();
 
 	//计算当前摄像机视图投影矩阵
-	m_curCameraViewProjectionMatrix = cameraProjectionMatrix * cameraViewMatrix;
+	glm::mat4 curCameraViewProjectionMatrix = m_matrixCameraProjection * m_matrixCameraView;
 	//初始化渲染列表
-	m_render_list->InitRenderList(m_scene, m_curCameraViewProjectionMatrix);
+	m_render_list->InitRenderList(m_scene, curCameraViewProjectionMatrix);
 
 	//渲染
 	Render();
@@ -246,6 +250,7 @@ bool Renderer::keyReleaseEvent(QKeyEvent* event)
 void Renderer::Render()
 {
 	m_driver_state->SetViewport(m_viewport);
+	m_driver_state->ClearBackground();
 
 	const std::vector<PSRenderItem>& opaqueObjects = m_render_list->GetOpaques();
 	const std::vector<PSRenderItem>& transparentObjects = m_render_list->GetTransparents();
@@ -263,7 +268,7 @@ void Renderer::Render()
 
 void Renderer::RenderRenderableObject(const PRenderableObject& object)
 {
-	object->UpdateModelViewMatrix(m_camera->GetWorldInverseMatrix());
+	object->UpdateModelViewMatrix(m_camera->GetViewMatrix());
 	object->UpdateNormalMatrix();
 
 	RenderBufferDirect(object);
@@ -273,6 +278,7 @@ void Renderer::RenderBufferDirect(const PRenderableObject& object)
 {
 	PMaterial material = object->GetMaterial();
 	PGeometry geometry = object->GetGeometry();
+	glm::mat4 matrixWorld = object->GetWorldMatrix();
 
 	//init program
 	//upload texture
@@ -285,7 +291,9 @@ void Renderer::RenderBufferDirect(const PRenderableObject& object)
 	//bind program
 	driver_material->Bind();
 	//set uniform
-	driver_material->UpdateUniform();
+	driver_material->UpdateUniform("ModelMatrix", ToMatrix4x4(matrixWorld));
+	driver_material->UpdateUniform("ViewMatrix", ToMatrix4x4(m_matrixCameraView));
+	driver_material->UpdateUniform("ProjectionMatrix", ToMatrix4x4(m_matrixCameraProjection));
 	//active texture uint
 	driver_material->ActiveTextureUint();
 	//bind vao

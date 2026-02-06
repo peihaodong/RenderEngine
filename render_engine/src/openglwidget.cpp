@@ -3,6 +3,9 @@
 OpenGLWidget::OpenGLWidget(QWidget *parent /*= nullptr*/)
 	: QOpenGLWidget(parent)
 {
+	setFocusPolicy(Qt::StrongFocus);  // 关键：允许控件通过点击/键盘获取焦点
+	setFocus();  // 主动获取焦点（可选，确保启动后立即响应）
+
 	m_renderer = std::make_shared<Renderer>();
 }
 
@@ -33,6 +36,8 @@ void OpenGLWidget::SetClearColor(float r, float g, float b, float a)
 
 void OpenGLWidget::initializeGL()
 {
+	initializeOpenGLFunctions();
+
 	m_renderer->initializeGL();
 }
 

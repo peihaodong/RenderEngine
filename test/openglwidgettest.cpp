@@ -4,6 +4,9 @@ OpenGLWidgetTest::OpenGLWidgetTest(QWidget *parent /*= nullptr*/)
 	: QOpenGLWidget(parent)
 {
 	m_renderer = std::make_shared<RenderDepth>();
+
+	setFocusPolicy(Qt::StrongFocus);  // 关键：允许控件通过点击/键盘获取焦点
+	setFocus();  // 主动获取焦点（可选，确保启动后立即响应）
 }
 
 OpenGLWidgetTest::~OpenGLWidgetTest()

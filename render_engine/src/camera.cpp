@@ -6,65 +6,80 @@ Camera::Camera()
 	m_strClassName = "Camera";
 }
 
-void Camera::SetWindowWidthHeight(int nWidth, int nHeight)
-{
-	m_fWindowWidth = nWidth;
-	m_fWindowHeight = nHeight;
+Camera::~Camera()
+{}
 
-	UpdateProjectionMatrix();
+void Camera::SetPosition(float x, float y, float z)
+{
+	SetPosition(glm::vec3(x, y, z));
 }
 
-glm::mat4 Camera::UpdateWorldMatrix(bool bUpdateParent /*= false*/, bool bUpdateChildren /*= false*/)
+void Camera::SetPosition(const glm::vec3& position)
 {
-	__super::UpdateWorldMatrix(bUpdateParent, bUpdateChildren);
-
-	m_matrixWorldInverse = glm::inverse(m_matrixWorld);
-	
-	return m_matrixWorldInverse;
+	m_position = position;
 }
 
-glm::mat4 Camera::GetWorldInverseMatrix() const
+void Camera::SetWindowWidthHeight(int width, int height)
 {
-	return m_matrixWorldInverse;
+	m_width = width;
+	m_height = height;
 }
 
-glm::mat4 Camera::GetProjectionMatrix() const
+glm::mat4 Camera::GetViewMatrix() const
 {
-	return m_matrixProjection;
+	glm::vec3 front = glm::cross(m_up, m_right);
+	glm::vec3 center = m_position + front;
+
+	return glm::lookAt(m_position, center, m_up);
 }
 
-OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float nearPlane, float farPlane)
+OrthoCamera::OrthoCamera(float left, float right, float bottom, float top, float nearPlane, float farPlane)
 	:m_left(left), m_right(right), m_bottom(bottom), m_top(top), m_nearPlane(nearPlane), m_farPlane(farPlane)
 {
-	m_strClassName = "OrthographicCamera";
 
-	UpdateProjectionMatrix();
 }
 
-glm::mat4 OrthographicCamera::UpdateProjectionMatrix()
+glm::mat4 OrthoCamera::GetProjectionMatrix() const
 {
-	m_matrixProjection = glm::ortho(m_left, m_right, m_bottom, m_top, m_nearPlane, m_farPlane);
-	return m_matrixProjection;
+	float scale = std::pow(2.0f, m_scale);
+	return glm::ortho(m_left * scale, m_right * scale, m_bottom * scale, m_top * scale, m_nearPlane, m_farPlane);
+}
+
+void OrthoCamera::SetScale(float deltaScale)
+{
+	m_scale += deltaScale;
 }
 
 PerspectiveCamera::PerspectiveCamera(float verticalAngle, float nearPlane, float farPlane)
 	:m_verticalAngle(verticalAngle), m_nearPlane(nearPlane), m_farPlane(farPlane)
 {
-	m_strClassName = "PerspectiveCamera";
 
-	UpdateProjectionMatrix();
 }
 
-glm::mat4 PerspectiveCamera::UpdateProjectionMatrix()
+glm::mat4 PerspectiveCamera::GetProjectionMatrix() const
 {
-	m_aspectRatio = m_fWindowWidth / m_fWindowHeight;
-	m_matrixProjection = glm::perspective(glm::radians(m_verticalAngle), m_aspectRatio, m_nearPlane, m_farPlane);
-	return m_matrixProjection;
+	return glm::perspective(m_verticalAngle, m_aspectRatio, m_nearPlane, m_farPlane);
+}
+
+void PerspectiveCamera::SetScale(float deltaScale)
+{
+	auto front = glm::cross(m_up, m_right);
+	m_position += (front * deltaScale);
+}
+
+void PerspectiveCamera::SetWindowWidthHeight(int width, int height)
+{
+	m_aspectRatio = float(width) / float(height);
 }
 
 CameraControl::CameraControl()
 {
-	m_strClassName = "CameraControl";
+
+}
+
+CameraControl::~CameraControl()
+{
+
 }
 
 void CameraControl::SetCamera(const PCamera& camera)
@@ -72,37 +87,24 @@ void CameraControl::SetCamera(const PCamera& camera)
 	m_camera = camera;
 }
 
-PCamera CameraControl::GetCamera() const
+void CameraControl::SetSensitivity(float sensitivity)
 {
-	return m_camera.lock();
-}
-
-void CameraControl::SetWindowWidthHeight(int nWidth, int nHeight)
-{
-	auto camera = m_camera.lock();
-	if (camera)
-		camera->SetWindowWidthHeight(nWidth, nHeight);
+	m_sensitivity = sensitivity;
 }
 
 GameCameraControl::GameCameraControl()
 {
-	m_strClassName = "GameCameraControl";
+
 }
 
-void GameCameraControl::SetSpeed(float speed)
+void GameCameraControl::SetMoveSpeed(float speed)
 {
-	m_fSpeed = speed;
-}
-
-void GameCameraControl::SetSensitivity(float sensitivity)
-{
-	m_fSensitivity = sensitivity;
+	m_fMoveSpeed = speed;
 }
 
 bool GameCameraControl::mousePressEvent(QMouseEvent* event)
 {
-	m_curMouseX = event->pos().x();
-	m_curMouseY = event->pos().y();
+	m_curMousePos = event->pos();
 
 	switch (event->button())
 	{
@@ -154,39 +156,19 @@ bool GameCameraControl::mouseMoveEvent(QMouseEvent* event)
 {
 	float xpos = event->pos().x();
 	float ypos = event->pos().y();
+	float curX = m_curMousePos.x();
+	float curY = m_curMousePos.y();
+
+	float deltaX = (xpos - curX) * m_sensitivity;
+	float deltaY = (ypos - curY) * m_sensitivity;
 
 	if (m_bRightMousePress)
 	{
-		float deltaX = (xpos - m_curMouseX) * m_fSensitivity;
-		float deltaY = (m_curMouseX - ypos) * m_fSensitivity;
-
-		m_fPitchAngle += deltaY;
-		m_fYawAngle += deltaX;
-
-		//不能仰面翻过去，也不能前滚翻
-		if (m_fPitchAngle >= 90.0f)
-		{
-			m_fPitchAngle = 89.0f;
-		}
-		if (m_fPitchAngle <= -90.0f) 
-		{
-			m_fPitchAngle = -89.0f;
-		}
-
-		m_front.y = sin(glm::radians(m_fPitchAngle));
-		m_front.x = cos(glm::radians(m_fYawAngle)) * cos(glm::radians(m_fPitchAngle));
-		m_front.z = sin(glm::radians(m_fYawAngle)) * cos(glm::radians(m_fPitchAngle));
-
-		//一定要注意传进去的是看向哪个点，而不是直接把方向传进去
-		auto camera = m_camera.lock();
-		if (camera)
-		{
-			camera->LookAt(m_front + camera->GetLocalPosition(), glm::vec3(0.0, 1.0, 0.0));
-		}
+		pitch(deltaY);
+		yaw(deltaX);
 	}
 
-	m_curMouseX = xpos;
-	m_curMouseY = ypos;
+	m_curMousePos = event->pos();
 
 	return false;
 }
@@ -198,15 +180,10 @@ bool GameCameraControl::wheelEvent(QWheelEvent* event)
 
 bool GameCameraControl::keyPressEvent(QKeyEvent* event)
 {
-	glm::vec3 direction;
+	glm::vec3 direction(0.0f);
 
-	auto camera = m_camera.lock();
-	if (!camera)
-		return true;
-
-	glm::vec3 front = camera->GetLocalDirection();
-	glm::vec3 right = camera->GetRight();
-	glm::vec3 position = camera->GetLocalPosition();
+	glm::vec3 front = glm::cross(m_camera->m_up, m_camera->m_right);
+	glm::vec3 right = m_camera->m_right;
 
 	switch (event->key())
 	{
@@ -222,29 +199,175 @@ bool GameCameraControl::keyPressEvent(QKeyEvent* event)
 	break;
 	case Qt::Key_A:
 	{
-		direction -= right;
+		direction += right;
 	}
 	break;
 	case Qt::Key_D:
 	{
-		direction += right;
+		direction -= right;
 	}
 	break;
 	default:
 		return true;
 	}
 
-	if (direction.x == 0 && direction.y == 0 && direction.z == 0)
-		return true;
-
-	direction = glm::normalize(direction);
-	position += direction * m_fSpeed;
-	camera->SetPosition(position);
+	if (glm::length(direction) != 0.0f)
+	{
+		direction = glm::normalize(direction);
+		m_camera->m_position += (direction * m_fMoveSpeed);
+	}
 
 	return false;
 }
 
 bool GameCameraControl::keyReleaseEvent(QKeyEvent* event)
 {
+	return false;
+}
+
+void GameCameraControl::pitch(float angle)
+{
+	m_pitch += angle;
+	if (m_pitch > 89.0f || m_pitch < -89.0f)
+	{
+		m_pitch -= angle;
+		return;
+	}
+
+	glm::mat4 mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), m_camera->m_right);
+	m_camera->m_up = mat * glm::vec4(m_camera->m_up, 0.0f);
+}
+
+void GameCameraControl::yaw(float angle)
+{
+	glm::mat4 mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_camera->m_up = mat * glm::vec4(m_camera->m_up, 0.0f);
+	m_camera->m_right = mat * glm::vec4(m_camera->m_right, 0.0f);
+}
+
+TrackBallCameraControl::TrackBallCameraControl()
+{
+
+}
+
+void TrackBallCameraControl::SetMoveSpeed(float speed)
+{
+	m_fMoveSpeed = speed;
+}
+
+bool TrackBallCameraControl::mousePressEvent(QMouseEvent* event)
+{
+	float xpos = event->pos().x();
+	float ypos = event->pos().y();
+	m_curX = xpos;
+	m_curY = ypos;
+
+	switch (event->button())
+	{
+	case Qt::LeftButton:
+	{
+		m_bLeftMousePress = true;
+	}
+	break;
+	case Qt::RightButton:
+	{
+		m_bRightMousePress = true;
+	}
+	break;
+	case Qt::MiddleButton:
+	{
+		m_bMiddleMousePress = true;
+	}
+	break;
+	}
+
+	return false;
+}
+
+bool TrackBallCameraControl::mouseReleaseEvent(QMouseEvent* event)
+{
+	switch (event->button())
+	{
+	case Qt::LeftButton:
+	{
+		m_bLeftMousePress = false;
+	}
+	break;
+	case Qt::RightButton:
+	{
+		m_bRightMousePress = false;
+	}
+	break;
+	case Qt::MiddleButton:
+	{
+		m_bMiddleMousePress = false;
+	}
+	break;
+	}
+
+	return false;
+}
+
+bool TrackBallCameraControl::mouseMoveEvent(QMouseEvent* event)
+{
+	float xpos = event->pos().x();
+	float ypos = event->pos().y();
+
+	if (m_bLeftMousePress)
+	{
+		//调整相机的各类参数
+		//1 计算经线跟纬线旋转的增量角度(正负都有可能）
+		float deltaX = (xpos - m_curX) * m_sensitivity;
+		float deltaY = (ypos - m_curY) * m_sensitivity;
+
+		//2 分开pitch跟yaw各自计算
+		pitch(-deltaY);
+		yaw(-deltaX);
+	}
+	else if (m_bMiddleMousePress)
+	{
+		float deltaX = (xpos - m_curX) * m_fMoveSpeed;
+		float deltaY = (ypos - m_curY) * m_fMoveSpeed;
+
+		m_camera->m_position += m_camera->m_up * deltaY;
+		m_camera->m_position -= m_camera->m_right * deltaX;
+	}
+
+	m_curX = xpos;
+	m_curY = ypos;
+
+	return false;
+}
+
+bool TrackBallCameraControl::wheelEvent(QWheelEvent* event)
+{
+	int wheelDelta = event->delta() / 120;
+	m_camera->SetScale(m_sensitivity * wheelDelta);
+
+	return false;
+}
+
+bool TrackBallCameraControl::keyPressEvent(QKeyEvent* event)
+{
 	return true;
+}
+
+bool TrackBallCameraControl::keyReleaseEvent(QKeyEvent* event)
+{
+	return true;
+}
+
+void TrackBallCameraControl::pitch(float angle)
+{
+	glm::mat4 mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), m_camera->m_right);
+	m_camera->m_up = mat * glm::vec4(m_camera->m_up, 0.0f);
+	m_camera->m_position = mat * glm::vec4(m_camera->m_position, 1.0f);
+}
+
+void TrackBallCameraControl::yaw(float angle)
+{
+	glm::mat4 mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_camera->m_up = mat * glm::vec4(m_camera->m_up, 0.0f);
+	m_camera->m_right = mat * glm::vec4(m_camera->m_right, 0.0f);
+	m_camera->m_position = mat * glm::vec4(m_camera->m_position, 1.0f);
 }

@@ -22,10 +22,12 @@ using PGeometry = std::shared_ptr<Geometry>;
 #pragma warning(disable: 4251)  // 禁用 C4251 警告
 
 //驱动
-class DLL_EXPORT Driver : public Object, public QOpenGLFunctions_4_3_Core, public std::enable_shared_from_this<Driver>
+class DLL_EXPORT Driver : public Object, public QOpenGLFunctions_4_3_Core
 {
 public:
 	Driver();
+
+	void CheckError();
 };
 using PDriver = std::shared_ptr<Driver>;
 
@@ -37,8 +39,13 @@ public:
 
 	static std::shared_ptr<DriverState> New();
 
+	//设置清屏颜色
+	void SetClearColor(const glm::vec4& color);
 	//设置视口
 	void SetViewport(const glm::vec4& viewport);
+
+	//清理背景
+	void ClearBackground();
 
 	//
 	void DrawElements(uint32_t count);
@@ -56,7 +63,7 @@ public:
 	~DriverMaterial();
 
 	void Bind();
-	void UpdateUniform();
+	void UpdateUniform(const char *name, const QMatrix4x4& value);
 	void ActiveTextureUint();
 
 protected:
@@ -74,6 +81,8 @@ class DLL_EXPORT DriverTexture : public Driver
 public:
 	DriverTexture(const PTexture& texture);
 	~DriverTexture();
+
+	GLuint GetGPUID() const;
 
 protected:
 	void Init();
@@ -101,6 +110,7 @@ protected:
 protected:
 	std::weak_ptr<Geometry> m_geometry;
 	GLuint m_vao = 0;
+	uint32_t m_nIndexAttributeCount = 0;
 };
 using PDriverGeometry = std::shared_ptr<DriverGeometry>;
 
@@ -153,6 +163,7 @@ public:
 
 	GLuint GetAttributeGPUID(ID idAttribute) const;
 	GLuint GetIndexAttributeGPUID(ID idAttribute) const;
+	GLuint GetTextureGPUID(ID idTexture) const;
 
 protected:
 	DriverManager();

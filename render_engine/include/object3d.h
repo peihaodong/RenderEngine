@@ -87,7 +87,7 @@ protected:
 	std::weak_ptr<Object3D> m_parent;					//父节点
 	std::vector<std::shared_ptr<Object3D>> m_children;	//子节点
 
-	bool m_bVisible = false;//是否有效（如果是可渲染物体，是否对其渲染）
+	bool m_bVisible = true;//是否有效（如果是可渲染物体，是否对其渲染）
 	EObject3DType m_type = EObject3DType::EOT_Object;//类型
 
 	glm::vec3 m_position = glm::vec3(0.0f);//位置
