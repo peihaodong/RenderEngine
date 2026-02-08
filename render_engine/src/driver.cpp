@@ -4,6 +4,7 @@
 #include "material.h"
 #include "texture.h"
 #include "geometry.h"
+#include "uniform.h"
 
 Driver::Driver()
 {
@@ -84,9 +85,37 @@ void DriverMaterial::Bind()
 	m_program->bind();
 }
 
-void DriverMaterial::UpdateUniform(const char *name, const QMatrix4x4& value)
+void DriverMaterial::UpdateUniform(const std::map<std::string, PUniform>& mapUniform)
 {
-	m_program->setUniformValue(name, value);
+	for (auto iter = m_mapUniform.begin(); iter != m_mapUniform.end(); iter++)
+	{
+		const std::string& name = iter->first;
+		auto iter2 = mapUniform.find(name);
+		if (iter2 != mapUniform.end())
+		{
+			iter->second->Update(iter2->second);
+			if (iter->second->IsNeedUpdate())
+			{
+				EUniformDataType type = iter->second->GetType();
+				if (type == EUniformDataType::EDT_Mat3)
+				{
+					QMatrix3x3 value;
+					if (iter->second->GetValue(value))
+					{
+						m_program->setUniformValue(name.c_str(), value);
+					}
+				}
+				else if (type == EUniformDataType::EDT_Mat4)
+				{
+					QMatrix4x4 value;
+					if (iter->second->GetValue(value))
+					{
+						m_program->setUniformValue(name.c_str(), value);
+					}
+				}
+			}
+		}
+	}
 }
 
 void DriverMaterial::ActiveTextureUint()
@@ -94,15 +123,23 @@ void DriverMaterial::ActiveTextureUint()
 	PMaterial material = m_material.lock();
 	if (!material)
 		return;
-	PTexture texture = material->GetDiffuseTexture();
-	if (!texture)
-		return;
-	DriverManager* manager = DriverManager::GetInstance();
-	GLuint nTextureGPUID = manager->GetTextureGPUID(texture->GetID());
+	EMaterialType type = material->GetMaterialType();
+	if (type == EMaterialType::EMT_DiffuseMaterial)
+	{
+		std::shared_ptr<DiffuseMaterial> diffuse_material = std::dynamic_pointer_cast<DiffuseMaterial>(material);
+		if (!diffuse_material)
+			return;
+		PTexture texture = diffuse_material->GetDiffuseTexture();
+		if (!texture)
+			return;
+		uint32_t uint = texture->GetTextureUint();
+		DriverManager* manager = DriverManager::GetInstance();
+		GLuint nTextureGPUID = manager->GetTextureGPUID(texture->GetID());
 
-	m_program->setUniformValue("sampler", 0);
-	glActiveTexture(GL_TEXTURE0);//激活0号纹理单元
-	glBindTexture(ToGL(texture->GetTextureType()), nTextureGPUID);//绑定texture
+		m_program->setUniformValue("samplerDiffuse", uint);
+		glActiveTexture(GL_TEXTURE0 + uint);//激活纹理单元
+		glBindTexture(ToGL(texture->GetTextureType()), nTextureGPUID);//绑定texture
+	}
 }
 
 void DriverMaterial::Init()
@@ -122,6 +159,35 @@ void DriverMaterial::Init()
 	{
 		qDebug() << "Shader程序链接失败：" << m_program->log();
 		return;
+	}
+	
+	//获取程序中活动的uniform数量
+	GLint uniformCount = 0;
+	glGetProgramiv(m_program->programId(), GL_ACTIVE_UNIFORMS, &uniformCount);
+	// 3. 获取uniform名称的最大长度（用于分配缓冲区）
+	GLint maxNameLength = 0;
+	glGetProgramiv(m_program->programId(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
+	//遍历所有活动的uniform，获取详细信息
+	std::vector<GLchar> nameBuffer(maxNameLength); // 存储uniform名称的缓冲区
+	for (GLint i = 0; i < uniformCount; ++i) 
+	{
+		GLsizei nameLength = 0; // 实际名称长度
+		GLint size = 0;         // 数组大小
+		GLenum type = 0;        // 数据类型
+
+		// 核心API：获取单个uniform的信息
+		glGetActiveUniform(
+			m_program->programId(),  // 着色器程序ID
+			i,                    // uniform索引
+			maxNameLength,        // 名称缓冲区最大长度
+			&nameLength,          // 输出实际名称长度
+			&size,                // 输出数组大小
+			&type,                // 输出数据类型
+			nameBuffer.data()     // 输出名称缓冲区
+		);
+
+		std::string name = QString::fromUtf8(nameBuffer.data(), nameLength).toStdString();
+		m_mapUniform[name] = Uniform::New();
 	}
 }
 
@@ -347,15 +413,23 @@ PDriverMaterial DriverManager::GetDriverMaterial(const PMaterial& material)
 	if (iterMaterial != m_mapDriverMaterial.end())
 		return iterMaterial->second;
 
-	PTexture texture = material->GetDiffuseTexture();
-	if (texture)
+	EMaterialType type = material->GetMaterialType();
+	if (type == EMaterialType::EMT_DiffuseMaterial)
 	{
-		ID idTexture = texture->GetID();
-		auto iterTexture = m_mapDriverTexture.find(idTexture);
-		if (iterTexture == m_mapDriverTexture.end())
+		std::shared_ptr<DiffuseMaterial> diffuse_material = std::dynamic_pointer_cast<DiffuseMaterial>(material);
+		if (diffuse_material)
 		{
-			std::shared_ptr<DriverTexture> driver_texture = std::make_shared<DriverTexture>(texture);
-			m_mapDriverTexture[idTexture] = driver_texture;
+			PTexture texture = diffuse_material->GetDiffuseTexture();
+			if (texture)
+			{
+				ID idTexture = texture->GetID();
+				auto iterTexture = m_mapDriverTexture.find(idTexture);
+				if (iterTexture == m_mapDriverTexture.end())
+				{
+					std::shared_ptr<DriverTexture> driver_texture = std::make_shared<DriverTexture>(texture);
+					m_mapDriverTexture[idTexture] = driver_texture;
+				}
+			}
 		}
 	}
 

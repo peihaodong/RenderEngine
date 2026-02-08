@@ -4,6 +4,7 @@
 #include "object3d.h"
 #include "material.h"
 #include "driver.h"
+#include "uniform.h"
 
 SRenderItem::SRenderItem()
 {
@@ -202,14 +203,16 @@ void Renderer::paintGL()
 {
 	//更新场景世界变换矩阵
 	m_scene->UpdateWorldMatrix(true, true);
-
-	//获取相机投影矩阵
-	m_matrixCameraProjection = m_camera->GetProjectionMatrix();
+	
 	//获取相机视图矩阵
-	m_matrixCameraView = m_camera->GetViewMatrix();
+	glm::mat4 matrixCameraView = m_camera->GetViewMatrix();
+	SetUniformValue("ViewMatrix", ToMatrix4x4(matrixCameraView));
+	//获取相机投影矩阵
+	glm::mat4 matrixCameraProjection = m_camera->GetProjectionMatrix();
+	SetUniformValue("ProjectionMatrix", ToMatrix4x4(matrixCameraProjection));
 
 	//计算当前摄像机视图投影矩阵
-	glm::mat4 curCameraViewProjectionMatrix = m_matrixCameraProjection * m_matrixCameraView;
+	glm::mat4 curCameraViewProjectionMatrix = matrixCameraProjection * matrixCameraView;
 	//初始化渲染列表
 	m_render_list->InitRenderList(m_scene, curCameraViewProjectionMatrix);
 
@@ -279,6 +282,7 @@ void Renderer::RenderBufferDirect(const PRenderableObject& object)
 	PMaterial material = object->GetMaterial();
 	PGeometry geometry = object->GetGeometry();
 	glm::mat4 matrixWorld = object->GetWorldMatrix();
+	SetUniformValue("ModelMatrix", ToMatrix4x4(matrixWorld));
 
 	//init program
 	//upload texture
@@ -291,9 +295,7 @@ void Renderer::RenderBufferDirect(const PRenderableObject& object)
 	//bind program
 	driver_material->Bind();
 	//set uniform
-	driver_material->UpdateUniform("ModelMatrix", ToMatrix4x4(matrixWorld));
-	driver_material->UpdateUniform("ViewMatrix", ToMatrix4x4(m_matrixCameraView));
-	driver_material->UpdateUniform("ProjectionMatrix", ToMatrix4x4(m_matrixCameraProjection));
+	driver_material->UpdateUniform(m_mapUniform);
 	//active texture uint
 	driver_material->ActiveTextureUint();
 	//bind vao
@@ -303,4 +305,34 @@ void Renderer::RenderBufferDirect(const PRenderableObject& object)
 
 	//release vao
 	//release program
+}
+
+void Renderer::SetUniformValue(const std::string& name, const QMatrix3x3& value)
+{
+	auto iter = m_mapUniform.find(name);
+	if (iter == m_mapUniform.end())
+	{
+		PUniform uniform = Uniform::New();
+		uniform->SetValue(value);
+		m_mapUniform[name] = uniform;
+	}
+	else
+	{
+		iter->second->SetValue(value);
+	}
+}
+
+void Renderer::SetUniformValue(const std::string& name, const QMatrix4x4& value)
+{
+	auto iter = m_mapUniform.find(name);
+	if (iter == m_mapUniform.end())
+	{
+		PUniform uniform = Uniform::New();
+		uniform->SetValue(value);
+		m_mapUniform[name] = uniform;
+	}
+	else
+	{
+		iter->second->SetValue(value);
+	}
 }

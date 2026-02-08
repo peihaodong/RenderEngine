@@ -18,7 +18,7 @@ public:
 	~MainWindow();
 
 protected:
-	QWidget* Test();
+	QWidget* ColorTriangle();//²ÊÉ«Èý½ÇÐÎ
 
 private:
 	Ui::MainWindowClass *ui;

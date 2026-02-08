@@ -7,7 +7,8 @@ using PTexture = std::shared_ptr<Texture>;
 
 enum class EMaterialType
 {
-	EMT_Material
+	EMT_Material,
+	EMT_DiffuseMaterial
 };
 
 #pragma warning(push)  // 保存当前警告状态
@@ -43,11 +44,6 @@ public:
 	//blending get
 	bool IsTransparent() const;
 
-	//texture set
-	void SetDiffuseTexture(const PTexture& texture);
-	//texture get
-	PTexture GetDiffuseTexture() const;
-
 protected:
 	ID m_id = 0;
 	EMaterialType m_type = EMaterialType::EMT_Material;
@@ -61,10 +57,22 @@ protected:
 	//blending
 	bool m_bTransparent = false;//是否透明
 	float m_fOpacity = 1.0f;//透明度
+};
+using PMaterial = std::shared_ptr<Material>;
 
+class DiffuseMaterial : public Material
+{
+public:
+	DiffuseMaterial();
+
+	//texture set
+	void SetDiffuseTexture(const PTexture& texture);
+	//texture get
+	PTexture GetDiffuseTexture() const;
+
+protected:
 	//texture
 	PTexture m_textureDiffuse;//漫反射纹理
 };
-using PMaterial = std::shared_ptr<Material>;
 
 #pragma warning(pop)  // 恢复之前的警告状态

@@ -45,20 +45,21 @@ TextureCache::TextureCache()
 	m_strClassName = "TextureCache";
 }
 
-Texture::Texture()
+Texture::Texture(uint32_t uint)
+	:m_nTextureUint(uint)
 {
 	m_strClassName = "Texture";
 	m_id = GenerateID();
 }
 
-std::shared_ptr<Texture> Texture::LoadTexture(const std::string& path)
+std::shared_ptr<Texture> Texture::LoadTexture(const std::string& path, uint32_t uint)
 {
 	TextureCache* cache = TextureCache::GetInstance();
 	PSTextureData texture_data = cache->GetTextureData(path);
 	if (!texture_data)
 		return nullptr;
 
-	std::shared_ptr<Texture> texture = std::make_shared<Texture>();
+	std::shared_ptr<Texture> texture = std::make_shared<Texture>(uint);
 	texture->SetWidth(texture_data->m_width);
 	texture->SetHeight(texture_data->m_height);
 	texture->SetData(texture_data);
@@ -189,4 +190,9 @@ ETextureWrapping Texture::GetWrapT() const
 ETextureWrapping Texture::GetWrapR() const
 {
 	return m_nWrapR;
+}
+
+uint32_t Texture::GetTextureUint() const
+{
+	return m_nTextureUint;
 }

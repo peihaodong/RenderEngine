@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->setupUi(this);
 
 	//OpenGLWidgetTest* widget = new OpenGLWidgetTest();
-	QWidget* widget = Test();
+	QWidget* widget = ColorTriangle();
 
 	QVBoxLayout* layout = new QVBoxLayout();
 	layout->setSpacing(0);  // 设置子部件之间的间距
@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
-QWidget* MainWindow::Test()
+QWidget* MainWindow::ColorTriangle()
 {
 	std::vector<float> positions = {
 		-0.5f, 0.0f, 0.0f,
@@ -60,9 +60,11 @@ QWidget* MainWindow::Test()
 	PScene scene = Scene::New();
 	scene->AddChild(mesh);
 	//创建相机对象
-	float fSize = 0.5f;
-	std::shared_ptr<OrthoCamera> camera = std::make_shared<OrthoCamera>(-fSize, fSize, -fSize, fSize, -fSize, fSize);
-	camera->SetPosition(0, 0, 0);
+// 	float fSize = 0.5f;
+// 	std::shared_ptr<OrthoCamera> camera = std::make_shared<OrthoCamera>(-fSize, fSize, -fSize, fSize, -fSize, fSize);
+// 	camera->SetPosition(0, 0, 0);
+	std::shared_ptr<PerspectiveCamera> camera = std::make_shared<PerspectiveCamera>(60.0f, 0.1f, 1000.0f);
+	camera->SetPosition(0, 0, 1);
 	//创建相机控制器对象
 	std::shared_ptr<TrackBallCameraControl> camera_control = std::make_shared<TrackBallCameraControl>();
 	//创建窗口对象

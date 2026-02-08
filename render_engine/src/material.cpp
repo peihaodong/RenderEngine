@@ -77,12 +77,18 @@ bool Material::IsTransparent() const
 	return m_bTransparent;
 }
 
-void Material::SetDiffuseTexture(const PTexture& texture)
+DiffuseMaterial::DiffuseMaterial()
+{
+	m_strClassName = "DiffuseMaterial";
+	m_type = EMaterialType::EMT_DiffuseMaterial;
+}
+
+void DiffuseMaterial::SetDiffuseTexture(const PTexture& texture)
 {
 	m_textureDiffuse = texture;
 }
 
-PTexture Material::GetDiffuseTexture() const
+PTexture DiffuseMaterial::GetDiffuseTexture() const
 {
 	return m_textureDiffuse;
 }

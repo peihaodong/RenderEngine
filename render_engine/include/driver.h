@@ -17,6 +17,8 @@ class Texture;
 using PTexture = std::shared_ptr<Texture>;
 class Geometry;
 using PGeometry = std::shared_ptr<Geometry>;
+class Uniform;
+using PUniform = std::shared_ptr<Uniform>;
 
 #pragma warning(push)  // 保存当前警告状态
 #pragma warning(disable: 4251)  // 禁用 C4251 警告
@@ -63,7 +65,7 @@ public:
 	~DriverMaterial();
 
 	void Bind();
-	void UpdateUniform(const char *name, const QMatrix4x4& value);
+	void UpdateUniform(const std::map<std::string, PUniform>& mapUniform);
 	void ActiveTextureUint();
 
 protected:
@@ -72,6 +74,7 @@ protected:
 protected:
 	std::weak_ptr<Material> m_material;
 	std::shared_ptr<QOpenGLShaderProgram> m_program;
+	std::map<std::string, PUniform> m_mapUniform;
 };
 using PDriverMaterial = std::shared_ptr<DriverMaterial>;
 

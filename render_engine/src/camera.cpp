@@ -58,7 +58,7 @@ PerspectiveCamera::PerspectiveCamera(float verticalAngle, float nearPlane, float
 
 glm::mat4 PerspectiveCamera::GetProjectionMatrix() const
 {
-	return glm::perspective(m_verticalAngle, m_aspectRatio, m_nearPlane, m_farPlane);
+	return glm::perspective(glm::radians(m_verticalAngle), m_aspectRatio, m_nearPlane, m_farPlane);
 }
 
 void PerspectiveCamera::SetScale(float deltaScale)

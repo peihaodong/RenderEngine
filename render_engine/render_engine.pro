@@ -36,7 +36,8 @@ HEADERS += \
 		include/renderer.h \
 		include/object3d.h \
 		include/camera.h \
-		include/driver.h
+		include/driver.h \
+		include/uniform.h
 
 # 指定源文件
 SOURCES += \
@@ -49,7 +50,8 @@ SOURCES += \
 		src/renderer.cpp \
 		src/object3d.cpp \
 		src/camera.cpp \
-		src/driver.cpp
+		src/driver.cpp \
+		src/uniform.cpp
 
 # 指定附加包含目录（$$PWD代表pro文件所在的目录）
 INCLUDEPATH += $$PWD/include \

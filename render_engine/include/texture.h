@@ -43,9 +43,9 @@ protected:
 class DLL_EXPORT Texture : public Object, public std::enable_shared_from_this<Texture>
 {
 public:
-	Texture();
+	explicit Texture(uint32_t uint);
 
-	static std::shared_ptr<Texture> LoadTexture(const std::string& path);
+	static std::shared_ptr<Texture> LoadTexture(const std::string& path, uint32_t uint);
 
 	//set
 	void SetWidth(uint32_t width);
@@ -75,6 +75,7 @@ public:
 	ETextureWrapping GetWrapS() const;
 	ETextureWrapping GetWrapT() const;
 	ETextureWrapping GetWrapR() const;
+	uint32_t GetTextureUint() const;
 
 protected:
 	ID m_id = 0;
@@ -82,6 +83,7 @@ protected:
 	uint32_t m_height = 0;
 	EDataType m_nDataType = EDataType::EDT_UnsignedByte;
 	PSTextureData m_texture_data;
+	uint32_t m_nTextureUint = 0;//纹理单元
 
 	ETextureType m_nTextureType = ETextureType::ETT_Texture2D;
 	ETextureFormat m_nFormat = ETextureFormat::ETF_RGBA;//输入的图片数据像素格式

@@ -8,6 +8,7 @@
 #include <QWheelEvent>
 #include <QKeyEvent>
 #include "constant.h"
+#include <map>
 
 class Object3D;
 using PObject3D = std::shared_ptr<Object3D>;
@@ -21,6 +22,8 @@ class Frustum;
 using PFrustum = std::shared_ptr<Frustum>;
 class RenderableObject;
 using PRenderableObject = std::shared_ptr<RenderableObject>;
+class Uniform;
+using PUniform = std::shared_ptr<Uniform>;
 
 class DriverState;
 using PDriverState = std::shared_ptr<DriverState>;
@@ -138,6 +141,9 @@ protected:
 	void RenderRenderableObject(const PRenderableObject& object);
 	void RenderBufferDirect(const PRenderableObject& object);
 
+	void SetUniformValue(const std::string& name, const QMatrix3x3& value);
+	void SetUniformValue(const std::string& name, const QMatrix4x4& value);
+
 protected:
 	PCamera m_camera;
 	PCameraControl m_camera_control;
@@ -145,8 +151,7 @@ protected:
 
 	glm::vec4 m_clear_color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 	glm::vec4 m_viewport = glm::vec4(0, 0, 800, 600);
-	glm::mat4 m_matrixCameraView;
-	glm::mat4 m_matrixCameraProjection;
+	std::map<std::string, PUniform> m_mapUniform;
 
 protected:
 	PRenderList m_render_list;	//‰÷»æ¡–±Ì
